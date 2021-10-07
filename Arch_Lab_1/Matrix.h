@@ -62,17 +62,17 @@ public:
 		columns = tempRows;
 	}
 
-	Matrix operator*(const Matrix& matrix) {
+	Matrix operator*(const Matrix* matrix) {
 
-		if (columns == matrix.rows) {
+		if (columns == matrix->rows) {
 
-			Matrix result = Matrix(rows, matrix.columns);
+			Matrix result = Matrix(rows, matrix->columns);
 
 			for (int i = 0; i < rows; ++i)
-				for (int j = 0; j < matrix.columns; ++j) {
-					result.arr[i * matrix.columns + j] = 0;
+				for (int j = 0; j < matrix->columns; ++j) {
+					result.arr[i * matrix->columns + j] = 0;
 					for (int k = 0; k < columns; ++k)
-						result.arr[i * matrix.columns + j] += arr[i * columns + k] * matrix.arr[j * matrix.columns + k];
+						result.arr[i * matrix->columns + j] += arr[i * columns + k] * matrix->arr[j * matrix->columns + k];
 				}
 
 			return result;

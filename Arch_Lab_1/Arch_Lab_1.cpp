@@ -5,10 +5,12 @@
 #include<iostream>
 #include <ctime>
 #include <random>
+#include <chrono>
 #include "Matrix.h"
 
 #define DEBUG 0
 #define OUT_IN_EXEL 1
+#define PARALLEL 1
 using namespace std;
 
 int ProcNum; // Number of available processes
@@ -41,7 +43,7 @@ void DummyDataInitialization(Matrix* pMatrix, Matrix* pVector, size_t size) {
 	cout << '\n';
 	cout << *pMatrix;
 	cout << *pVector;
-#endif // 0
+#endif // DEBUG
 }
 
 // Function for memory allocation and initialization of objects’ elements
@@ -204,24 +206,70 @@ void MatrixMultiplicationMPI(Matrix* matrix, Matrix* vector, Matrix* result, int
 	if (ProcRank == 0) {
 #if DEBUG
 		cout << *result;
-#endif // 0
+#endif // DEBUG
 
 #if OUT_IN_EXEL
 		cout << time;
 #else
 		cout << "\nTime of computation: " << time;
-#endif // 0
+#endif // OUT_IN_EXEL
 
 	}
 }
  
+class Timer
+{
+private:
+	// Псевдонимы типов используются для удобного доступа к вложенным типам
+	using clock_t = std::chrono::high_resolution_clock;
+	using second_t = std::chrono::duration<double, std::ratio<1> >;
+
+	std::chrono::time_point<clock_t> m_beg;
+
+public:
+	Timer() : m_beg(clock_t::now())
+	{
+	}
+
+	void reset()
+	{
+		m_beg = clock_t::now();
+	}
+
+	double elapsed() const
+	{
+		return std::chrono::duration_cast<second_t>(clock_t::now() - m_beg).count();
+	}
+};
 
 int main(int argc, char* argv[])
 {
-	Matrix* A = new Matrix();
-	Matrix* B = new Matrix();
+	int size = *argv[1] - '0';
+	double time = 0;
+	Matrix* A = new Matrix(size, size);
+	Matrix* B = new Matrix(1, size);
 	Matrix* C = new Matrix();
 
-	MatrixMultiplicationMPI(A,B,C, argc, argv);
+#if PARALLEL
+	MatrixMultiplicationMPI(A, B, C, argc, argv);
+#else
+
+	Timer timer;
+
+	C = &((*A)*(B));
+
+	time = timer.elapsed();
+
+#if DEBUG
+	cout << *result;
+#endif // DEBUG
+
+#if OUT_IN_EXEL
+	cout << time;
+#else
+	cout << "\nTime of computation: " << time;
+#endif // OUT_IN_EXEL
+
+#endif // PARALLEL
 	return 0;
 }
